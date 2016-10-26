@@ -1,0 +1,123 @@
+........................................................
+--------------------------------------------------------
+Leeme.txt v.10 - Autor: Miguel Torrealba Sánchez
+                        Mireya Morales Primera
+--------------------------------------------------------
+
+Este archivo contiene una breve descripción de las
+carpetas y un ejemplo simple de RPC, el cual se provee
+para el curso CI-4835 de la USB (Sep-Dic 2012). El 
+ejemplo fue obtenido del libro: 
+UNIX Programación Práctica.
+Guía para la concurrencia, la comunicaión y los
+multihilos 
+Autores: Kay A. Robbins
+         Steven Robbins
+Editorial Prentice Hall.
+1997 
+
+
+
+--------------------------------------------------------
+La carpeta "cero" contiene tres archivos:
+
+programa_local.c
+rand.h
+servicio.c
+
+programa_local.c y rand.h han sido concebidos como un
+programa que se ejecutará en una única máquina. Luego,
+las llamadas a los procedimientos son locales. 
+
+El archivo llamado "servicio.c" ilustra el diseño inicial
+para separar los procedimientos bajo la concepción de un
+sevicio. Luego, este servicio ha sido considerado para
+que se ejecute en modo remoto.
+--------------------------------------------------------
+
+La carpeta "uno" almacena varios archivos, de los cuales
+los más relevantes son: "rand.x" y "rand.h"
+
+"rand.x" sigue la especificación de lenguaje de RPC para
+que sirva como entrada a la orden de comandos "rpcgen".
+
+El programa "cliente.c" sigue siendo un remanente del
+código local y se mantiene para verificar que el "rand.h"
+funciona correctamente.
+--------------------------------------------------------
+
+La carpeta "dos" contiene la salida de archivos que fue
+generado con el comando: "rpcgen -C -a rand.x"
+
+La opción "C" obliga a generar código ANSI C, mientras
+que la opción "a" señala que deben generarse las
+plantillas de códigos para el cliente y el servidor.
+
+En esta carpeta el archivo "rand.x" se mantiene sin
+cambios, pero "rand.h" es modificado por el "rpcgen".
+
+El archivo "rand_client.c" contiene el código generado
+por "rpcgen" para la aplicación del cliente y deberá
+ser alterado por el programador.
+
+El archivo "rand_clnt.c" contiene el código del talón
+vinculado con el cliente, que "rpcgen" generó y no debe
+ser alterado.
+
+El archivo "rand_server.c" registra la plantilla con
+el código generado por "rpcgen" para la aplicación del
+servidor y deberá ser alterado.
+
+El archivo "rand_svc.c" ha sido producto de "rpcgen" y
+almacena el código del talón del servidor. No deberá
+ser modificado.
+
+Esta carpeta contiene además el archivo "Makefile.rand"
+que sirve para generar los ejecutables y ha sido generado
+por "rpcgen". Tampoco demanda que se altere.
+--------------------------------------------------------
+
+La carpeta "tres" contiene la salida de archivos después
+de que el programador los modificó. Aquí únicamente se
+alteraron "rand_client.c" y "rand_server.c"
+--------------------------------------------------------
+
+La carpeta "cuatro" contiene los ejecutables del código
+del cliente y del servidor. Para obtener ambos archivos,
+se ejecutó la orden: "make -f Makefile.rand".
+
+En este ejemplo el programa se procesó en "Ubuntu 12.04"
+--------------------------------------------------------
+
+El último paso que se requiere es la instalación del
+demonio "portmapper/rpcbind". Para ello se empleó la
+orden: "apt-get install portmap" y luego como superusuario
+se activó el demonio. Esto se hizo en "background" y a
+través de la línea de comando: "sudo rpcbind &"
+
+En seguida se ejecuta en modo privilegiado el código
+del servicio remoto. Esto se hace empleando la orden:
+"sudo ./rand_server &"
+
+Si después de ello se ejecuta la orden: "echo $?" y se
+obtiene "0" todo el procedimiento ha sido correcto y
+se podría usar el comando "ps" o "top" para constatar
+que el servicio remoto está escuchando y listo para
+atender a cualquier llamado externo.
+
+Lo único que resta es ejecutar como superusuario el
+ejecutable del cliente. Para ello se ejecuta la
+línea de comandos:
+"sudo ./rand_client <dir_ip_servidor> 4323  10"
+
+donde dir_ip_servidor la dirección IP del servidor.
+4323 es el valor de la semilla que incluye este ejemplo
+y puede ser modificado según se desee.
+
+10 es la cantidad de valores pseudoaleatorios que se
+generarán. Este número también puede ser alterado a
+voluntad del usuario.
+--------------------------------------------------------
+
+USB - 11/10/12
+........................................................

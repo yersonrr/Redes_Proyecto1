@@ -1,0 +1,4 @@
+#include <stdlib.h>
+
+void initialize_random (long int semilla);
+double get_netx_random (void);

@@ -1,0 +1,21 @@
+Jean Hernandez 11-10457
+Yerson Roa	11-10876
+
+Archivos:
+	proyecto1_cliente.c :: codigo fuente de la aplicacion cliente.
+	proyecto1_servidor.c :: codigo fuente de la aplicacion servidor.
+	Leeme.txt :: este documento.
+	log.txt :: archivo para logear actividad.
+	makefile :: archivo para compilar los programas.
+
+Para ejecutar el servidor:
+	reserva_bol_ser -f <filas> -c <columnas> [-p puerto]
+
+Para ejecutar el cliente:
+	reserva_bol_cli <ip-servidor> -p <puerto> -f <fila> -c <columna>
+	Si el programa indica que se deben introducir mas datos, estos seran una nueva fila y columna.
+
+Condiciones particulares:
+	- La funcionalidad de loggear actividad no fue completamente implementada debido a que se incorporo a la especificacion del proyecto muy tarde y su incorporacion implicaba cambios estructurales de gran costo.
+	- El maximo tamano de la matriz es 10x4 (1<=filas<=10, 1<=columnas<=10). Ademas, la aplicacion cliente se rige por el maximo que se le de al servidor al crearlo.
+	- El maximo numero de hilos simultaneaos es 100.
