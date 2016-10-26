@@ -92,7 +92,9 @@ void parse_arguments(int argc, char *argv[], char **port, int *i, char **server,
 
 int main (int argc, char *argv[]) {
 	char buffer[50];
-    int sock, try, c, id, j, a, len, R, C;
+	char *message1 = "Ingrese la cantidad a Depositar: ";
+	char *message2 = "Ingrese la cantidad a Retirar: ";
+    int sock, try, c, id, j, a, len, value;
     struct addrinfo hints, *servinfo;
     char *server = NULL;
     char *option = NULL;
@@ -121,7 +123,17 @@ int main (int argc, char *argv[]) {
         	return -1;
  		}
 
-	 	sprintf(buffer, "%d %s", id, option);
+ 		while(1){
+ 			if((strcmp(option,"d") == 0)) printf("%s", message1);
+			else printf("%s", message2);
+ 			scanf("%d", &value);
+
+ 			if( value > 3000 && (strcmp(option,"r") == 0)) printf("Valor mayor al monto maximo a retirar\n");
+ 			else if(value <= 0) printf("Valor invalido\n");
+ 			else break;
+ 		}
+
+	 	sprintf(buffer, "%d %s %d", id, option, value);
 	 	try = 3;
 
 	 	while (try--)
