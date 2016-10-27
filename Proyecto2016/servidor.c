@@ -34,8 +34,6 @@ void parse_arguments(int argc, char *argv[], char **port, FILE **bit_d, FILE **b
 				if (!bit_d) {
 					printf("No tienes permiso para escribir en este archivo \n");
 					exit(0);
-				} else {
-					fprintf(*bit_d,"Nombre de bitacora_deposito = %s \n");
 				}
 				break;
 			case 'o':
@@ -43,8 +41,6 @@ void parse_arguments(int argc, char *argv[], char **port, FILE **bit_d, FILE **b
 				if(!bit_r){
 					printf("No tienes permiso para escribir en este archivo \n");
 					exit(0);
-				} else{
-					fprintf(*bit_r,"Nombre de bitacora_retiro = %s \n");
 				}
 				break;
 			case '?':
@@ -56,11 +52,15 @@ void parse_arguments(int argc, char *argv[], char **port, FILE **bit_d, FILE **b
 }
 
 int main(int argc, char *argv[]) {
-	char buffer[50];
+	char buffer[55];
+	char *token;
 	char *port = NULL;
+	char *op,*id_usuario,*usuarios;
 	FILE *bit_deposito;
 	FILE *bit_retiro;
-	int sockfd, clifd, size, n;
+	int sockfd, clifd, size, n, monto,tamano;
+	int total = 80000;
+	int cantidad_op = 0;
 	struct sockaddr_in servidor, cliente;
 
 	parse_arguments(argc, argv, &port, &bit_deposito, &bit_retiro);
@@ -93,17 +93,73 @@ int main(int argc, char *argv[]) {
      		exit(0);
       	}
 	    printf("Se obtuvo una conexión desde %s\n", inet_ntoa(cliente.sin_addr)); 
-	    send(clifd,"Bienvenido a mi servidor.\n",25,0); 
-   	
-   		bzero(buffer,strlen(buffer));
-		n = read(clifd,buffer,strlen(buffer));
+	    send(clifd,"Bienvenido al servicio de cajeros Banco Simon Bolivar.\n",55,0); 
+   		bzero(buffer,55);
+		n = read(clifd,buffer,50); // Hay que hacer esto mas generico
 		if (n < 0) {
 			error("ERROR al leer del socket");
 			exit(0);
 		}
-		printf("Here is the message: %s",buffer);
-   }
+		usuarios = (char *) malloc(4*sizeof(char));
 
+		token = strtok(buffer," ");
+		int contador = 0;
+		while (token != NULL) {
+			if (contador == 0){
+				id_usuario = token;
+			} else if (contador == 1) {
+				op = token;
+			} else if (contador == 2){
+				monto = atoi(token);
+			} else {
+				printf("ESTO NO DEBERIA PASAR. \n");
+				exit(0);
+			}
+			token = strtok(NULL," ");
+			contador = contador + 1;
+		}
+
+		int i = 0;
+		tamano = sizeof(usuarios)/sizeof(usuarios[0]);
+		// HAY QUE REVISAR ESTO
+		while (i < tamano) {
+			if (!strcmp(&(usuarios[i]),id_usuario)){
+				printf("DEBERA ESTAR AQUI 3 VECES\n");
+				cantidad_op = cantidad_op + 1;
+			}
+			i = i+1;
+		}
+		
+		if (cantidad_op > 3 && !strcmp(op,"r")) {
+			send(clifd,"3",55,0);
+			exit(0);
+		}
+		
+		if (total < 5001 && !strcmp(op,"r")) {
+			send(clifd,"2",55,0);
+		} else if (monto > 3000){
+			send(clifd,"2",55,0);
+		} else if (!strcmp(op,"d")) {
+			total = total + monto;
+			fprintf(bit_deposito, "Fecha Hora %s %d \n",op,id_usuario);
+			send(clifd,"0",55,0);
+		} else if (total > 5000 && !strcmp(op,"r")){
+			total = total - monto;
+			fprintf(bit_retiro, "Fecha Hora %s %d \n",op,id_usuario);
+			send(clifd,"1",55,0);
+		} else {
+			printf("NO DEBERIA ENTRAR EN ESTE ELSE \n");
+			exit(0);
+		}
+		cantidad_op = 0;
+		tamano = sizeof(usuarios)/sizeof(usuarios[0]);
+		usuarios = (char *) realloc(usuarios,sizeof(usuarios)+sizeof(usuarios[0]));
+		strcpy(id_usuario, &(usuarios[tamano-1]));
+
+		printf("El total restante es de: %d \n",total);
+		printf("%d \n",usuarios[tamano-1]);
+	}
+   
 	printf("%s \n","prueba chill de servidor");
 	return 0;
 }

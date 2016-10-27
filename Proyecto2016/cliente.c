@@ -91,10 +91,10 @@ void parse_arguments(int argc, char *argv[], char **port, int *i, char **server,
 
 
 int main (int argc, char *argv[]) {
-	char buffer[50];
+	char buffer[55];
 	char *message1 = "Ingrese la cantidad a Depositar: ";
 	char *message2 = "Ingrese la cantidad a Retirar: ";
-    int sock, try, c, id, j, a, len, value;
+    int sock, try, c, id, j, a, len, value, n;
     struct addrinfo hints, *servinfo;
     char *server = NULL;
     char *option = NULL;
@@ -115,19 +115,18 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    
  	while (1) {
  		sock = socket(AF_INET, SOCK_STREAM, 0);
  		if (connect(sock, servinfo->ai_addr, servinfo->ai_addrlen) != 0) {
  			printf("ERROR: no se pudo conectar con el servidor.\n");
         	return -1;
  		}
-
+	 	n = read(sock,buffer,55); // Hay que poner esto mas generico pero me da error
+ 		printf("%s\n",buffer);
  		while(1){
  			if((strcmp(option,"d") == 0)) printf("%s", message1);
 			else printf("%s", message2);
  			scanf("%d", &value);
-
  			if( value > 3000 && (strcmp(option,"r") == 0)) printf("Valor mayor al monto maximo a retirar\n");
  			else if(value <= 0) printf("Valor invalido\n");
  			else break;
@@ -145,6 +144,8 @@ int main (int argc, char *argv[]) {
 	 	}
 
 	    len = recv(sock, buffer, 50, 0);
+ 		printf("Mensaje del Servidor: \n");
+	 	printf("%s\n",buffer);
 	    switch (buffer[0]) {
 	    	case '0':
 	    		printf("Deposito hecho con exito.\n");
