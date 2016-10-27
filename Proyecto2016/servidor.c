@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-void parse_arguments(int argc, char *argv[], char **port, FILE **bit_d, FILE **bit_r) {
+void parse_arguments(int argc, char *argv[], char **port, char **bit_d, char **bit_r) {
 	char *bad_syntax_msg = "Sintaxis errada de argumentos del programa. Sintaxis correcta: bsd_svr -l <puerto_servidor> -i <bitacora_deposito> -o <bitacora_retiro> \n";
 	int opt = 0;	
 
@@ -30,18 +30,10 @@ void parse_arguments(int argc, char *argv[], char **port, FILE **bit_d, FILE **b
 					break;
 				}
 			case 'i':
-				*bit_d = fopen(optarg,"a");
-				if (!bit_d) {
-					printf("No tienes permiso para escribir en este archivo \n");
-					exit(0);
-				}
+				*bit_d = optarg;
 				break;
 			case 'o':
-				*bit_r = fopen(optarg,"a");
-				if(!bit_r){
-					printf("No tienes permiso para escribir en este archivo \n");
-					exit(0);
-				}
+				*bit_r = optarg;
 				break;
 			case '?':
 				printf("Llamada ingresada no es valida.\n");
@@ -55,9 +47,12 @@ int main(int argc, char *argv[]) {
 	char buffer[55];
 	char *token;
 	char *port = NULL;
-	char *op,*id_usuario,*usuarios;
-	FILE *bit_deposito;
-	FILE *bit_retiro;
+	char *op;
+	int id_usuario,cantidad_retiros = 0;
+	int usuarios[30000]; // Arreglo de id de usuarios que han retirado.
+	char *bit_deposito;
+	char *bit_retiro;
+	FILE *fd_d, *fd_r;
 	int sockfd, clifd, size, n, monto,tamano;
 	int total = 80000;
 	int cantidad_op = 0;
@@ -95,18 +90,17 @@ int main(int argc, char *argv[]) {
 	    printf("Se obtuvo una conexión desde %s\n", inet_ntoa(cliente.sin_addr)); 
 	    send(clifd,"Bienvenido al servicio de cajeros Banco Simon Bolivar.\n",55,0); 
    		bzero(buffer,55);
-		n = read(clifd,buffer,50); // Hay que hacer esto mas generico
+		n = recv(clifd,buffer,50,0); // Hay que hacer esto mas generico
 		if (n < 0) {
-			error("ERROR al leer del socket");
+			perror("ERROR al leer del socket");
 			exit(0);
 		}
-		usuarios = (char *) malloc(4*sizeof(char));
 
 		token = strtok(buffer," ");
 		int contador = 0;
 		while (token != NULL) {
 			if (contador == 0){
-				id_usuario = token;
+				id_usuario = atoi(token);
 			} else if (contador == 1) {
 				op = token;
 			} else if (contador == 2){
@@ -116,50 +110,59 @@ int main(int argc, char *argv[]) {
 				exit(0);
 			}
 			token = strtok(NULL," ");
-			contador = contador + 1;
+			contador++;
 		}
 
 		int i = 0;
-		tamano = sizeof(usuarios)/sizeof(usuarios[0]);
-		// HAY QUE REVISAR ESTO
-		while (i < tamano) {
-			if (!strcmp(&(usuarios[i]),id_usuario)){
+		while (i < cantidad_retiros) {
+			if (usuarios[i] == id_usuario){
 				printf("DEBERA ESTAR AQUI 3 VECES\n");
-				cantidad_op = cantidad_op + 1;
+				cantidad_op++;
 			}
-			i = i+1;
-		}
-		
-		if (cantidad_op > 3 && !strcmp(op,"r")) {
-			send(clifd,"3",55,0);
-			exit(0);
+			if (cantidad_op == 3) {
+				break;
+			}
+			i++;
 		}
 		
 		if (total < 5001 && !strcmp(op,"r")) {
-			send(clifd,"2",55,0);
-		} else if (monto > 3000){
+			send(clifd,"4",55,0);
+		} else if (monto > 3000 && !strcmp(op,"r")){
 			send(clifd,"2",55,0);
 		} else if (!strcmp(op,"d")) {
-			total = total + monto;
-			fprintf(bit_deposito, "Fecha Hora %s %d \n",op,id_usuario);
+			fd_d = fopen(bit_deposito,"a");
 			send(clifd,"0",55,0);
-		} else if (total > 5000 && !strcmp(op,"r")){
-			total = total - monto;
-			fprintf(bit_retiro, "Fecha Hora %s %d \n",op,id_usuario);
+			n = recv(clifd,buffer,50,0); // Hay que hacer esto mas generico
+			if (n < 0) {
+				error("ERROR al leer del socket");
+				exit(0);
+			}
+			total = total + monto;
+			fprintf(fd_d, "Fecha Hora %s %d %d \n",op,monto,id_usuario);
+			fclose(fd_d);
+		} else if (total > 5000 && !strcmp(op,"r") && cantidad_op < 3){
+			fd_r = fopen(bit_retiro,"a");
 			send(clifd,"1",55,0);
-		} else {
+			n = recv(clifd,buffer,50,0); // Hay que hacer esto mas generico
+			if (n < 0) {
+				error("ERROR al leer del socket");
+				exit(0);
+			}
+			if (atoi(buffer) == id_usuario) {
+				total = total - monto;
+				usuarios[cantidad_retiros] = id_usuario;
+				cantidad_retiros++;
+				fprintf(fd_r,"Fecha Hora %s %d %d \n",op,monto,id_usuario);
+				fclose(fd_r);
+			}
+		} else if (cantidad_op == 3) {
+			send(clifd,"3",55,0);
+		} else{
 			printf("NO DEBERIA ENTRAR EN ESTE ELSE \n");
-			exit(0);
 		}
-		cantidad_op = 0;
-		tamano = sizeof(usuarios)/sizeof(usuarios[0]);
-		usuarios = (char *) realloc(usuarios,sizeof(usuarios)+sizeof(usuarios[0]));
-		strcpy(id_usuario, &(usuarios[tamano-1]));
-
+		cantidad_op = 0;		
 		printf("El total restante es de: %d \n",total);
-		printf("%d \n",usuarios[tamano-1]);
+		printf("%d \n",usuarios[cantidad_retiros-1]);
 	}
-   
-	printf("%s \n","prueba chill de servidor");
 	return 0;
 }

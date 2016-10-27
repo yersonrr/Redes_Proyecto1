@@ -164,7 +164,7 @@ int main (int argc, char *argv[]) {
 	    		close(sock);
 	    		return -1;
 	    	case '3':
-	    		printf("Ha retirado la cantidad maxima establecida por el cajero\n");
+	    		printf("Ha retirado la cantidad maxima diaria establecida por el cajero\n");
 	    		close(sock);
 	    		return -1;
 	    	case '4':
