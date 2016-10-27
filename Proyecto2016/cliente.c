@@ -149,18 +149,26 @@ int main (int argc, char *argv[]) {
 	    switch (buffer[0]) {
 	    	case '0':
 	    		printf("Deposito hecho con exito.\n");
+	    		sprintf(buffer, "%d", id);
+	    		send(sock, buffer, strlen(buffer), 0);
 	    		close(sock);
 	    		return 0;
 	    	case '1':
 	    		printf("Retiro hecho con exito.\n");
+	    		sprintf(buffer, "%d", id);
+	    		send(sock, buffer, strlen(buffer), 0);
 	    		close(sock);
 	    		return 0;
 	    	case '2':
-	    		printf("No es posible establecer el retiro.\n");
+	    		printf("No es posible establecer el retiro. Monto mayor al maximo permitido (Maximo 3000).\n");
 	    		close(sock);
 	    		return -1;
 	    	case '3':
 	    		printf("Ha retirado la cantidad maxima establecida por el cajero\n");
+	    		close(sock);
+	    		return -1;
+	    	case '4':
+	    		printf("No es posible establecer el retiro. Cantidad de dinero insuficiente.\n");
 	    		close(sock);
 	    		return -1;
 	    	default:
