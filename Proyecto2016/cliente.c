@@ -1,15 +1,38 @@
+/* Proyecto 1 - CI-4825
+Integrantes:
+Yerson Roa - carnet:
+Douglas Torres - carnet: 11-11027
+
+Programa que realiza las labores del cliente. */
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAXHOSTNAME 1000
 
+char buffer[55];
+int sock;
+
+/*  Manejador de la señal SIGINT que se origina cuando el usuario cierra sesión
+	mediante Ctrl-c.*/
+void int_handler (int signum) {	
+	printf("\n Se cerrará la conexión con el banco. \n");
+	sprintf(buffer, "%d", 9);
+	send(sock, buffer, strlen(buffer), 0);
+	close(sock);
+	exit(1);
+}
+
+/*  Función encargada de procesar la llamada del programa y en caso de presentar
+	algún error, es debidamente informado al usuario.
+*/
 void parse_arguments(int argc, char *argv[], char **port, int *i, char **server, char **o) {
 	char *bad_syntax_msg = "Sintaxis errada de argumentos del programa. Sintaxis correcta: bsd_cli -d <ip_servidor> -p <puerto_servidor> -c <op> -i <codigo_usuario>\n";
-
 
 	if (argc != 9) {
 		printf("%s", bad_syntax_msg);
@@ -86,25 +109,22 @@ void parse_arguments(int argc, char *argv[], char **port, int *i, char **server,
 	}
 
 	*server = s;
-
 }
-
-
+/*  Ciclo principal del programa, donde se ejecutan las operaciones de creación 
+	de socket, conexión con el servidor y resultado de la operación realizada.
+*/
 int main (int argc, char *argv[]) {
-	char buffer[55];
 	char *message1 = "Ingrese la cantidad a Depositar: ";
 	char *message2 = "Ingrese la cantidad a Retirar: ";
-    int sock, try, c, id, j, a, len, value, n;
+    int try, c, id, j, a, len, value, n;
     struct addrinfo hints, *servinfo;
     char *server = NULL;
     char *option = NULL;
     char *port = NULL;
 
-	parse_arguments(argc, argv, &port, &id, &server, &option);
-	printf("Server: %s\n", server);
-	printf("Puerto: %s\n", port);
-	printf("Id: %d\n", id);
-	printf("Opcion: %s\n", option);
+	parse_arguments(argc, argv, &port, &id, &server, &option);    
+    // Se asigna el manejador de señal originada por el cambio de dia.
+    signal(SIGINT,int_handler);
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
@@ -121,7 +141,7 @@ int main (int argc, char *argv[]) {
  			printf("ERROR: no se pudo conectar con el servidor.\n");
         	return -1;
  		}
-	 	n = read(sock,buffer,55); // Hay que poner esto mas generico pero me da error
+	 	n = read(sock,buffer,55);
  		printf("%s\n",buffer);
  		while(1){
  			if((strcmp(option,"d") == 0)) printf("%s", message1);
@@ -133,8 +153,8 @@ int main (int argc, char *argv[]) {
  		}
 
 	 	sprintf(buffer, "%d %s %d", id, option, value);
+	 	// Se realizan 3 intentos de conexión con el servidor para ver si responde.
 	 	try = 3;
-
 	 	while (try--)
 	 		if (send(sock, buffer, strlen(buffer), 0) >= 0) break;
 
@@ -145,7 +165,6 @@ int main (int argc, char *argv[]) {
 
 	    len = recv(sock, buffer, 50, 0);
  		printf("Mensaje del Servidor: \n");
-	 	printf("%s\n",buffer);
 	    switch (buffer[0]) {
 	    	case '2':
 	    		printf("Deposito hecho con exito.\n");
