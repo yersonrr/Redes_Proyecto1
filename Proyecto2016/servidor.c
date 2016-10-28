@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <time.h>
 
 int cantidad_retiros = 0;
 int usuarios[30000]; // Arreglo de id de usuarios que han retirado.
@@ -59,6 +60,8 @@ void *conexion(void *cli_fd_ptr){
 	char buffer[55];
 	char *token;
 	int *cli_fd = (int *) cli_fd_ptr;
+	struct tm t;
+	time_t tiempo;
 
     send(*cli_fd,"Bienvenido al servicio de cajeros Banco Simon Bolivar.\n",55,0); 
   	bzero(buffer,55);
@@ -94,16 +97,20 @@ void *conexion(void *cli_fd_ptr){
 		i++;
 	}
 
+	time(&tiempo);
+	t = *localtime_r(&tiempo,&t);
 	if (!strcmp(op,"d")) {
 		fd_d = fopen(bit_deposito,"a");
 		send(*cli_fd,"2",55,0);
 		n = recv(*cli_fd,buffer,50,0); // Hay que hacer esto mas generico
+
 		if (n < 0) {
 			error("ERROR al leer del socket");
 			exit(0);
 		}
 		total = total + monto;
-		fprintf(fd_d, "Fecha Hora %s %d %d \n",op,monto,id_usuario);
+		fprintf(fd_r,"Fecha: %d/%d/%d Hora: %d:%d:%d deposito %d bs %d \n",t.tm_mday,
+			t.tm_mon,t.tm_year,t.tm_hour,t.tm_min,t.tm_sec,monto,id_usuario);
 		fclose(fd_d);
 	} else if (total > 5000 && !strcmp(op,"r") && cantidad_op < 3){
 		fd_r = fopen(bit_retiro,"a");
@@ -113,12 +120,12 @@ void *conexion(void *cli_fd_ptr){
 			error("ERROR al leer del socket");
 			exit(0);
 		}
-		
 		if (atoi(buffer) == id_usuario) {
 			total = total - monto;
 			usuarios[cantidad_retiros] = id_usuario;
 			cantidad_retiros++;
-			fprintf(fd_r,"Fecha Hora %s %d %d \n",op,monto,id_usuario);
+			fprintf(fd_r,"Fecha: %d/%d/%d Hora: %d:%d:%d retiro %d bs %d \n",t.tm_mday,
+				t.tm_mon,t.tm_year,t.tm_hour,t.tm_min,t.tm_sec,monto,id_usuario);
 			fclose(fd_r);
 		}
 	} else if (monto > 3000 && !strcmp(op,"r")){
