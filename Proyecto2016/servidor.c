@@ -1,6 +1,6 @@
 /* Proyecto 1 - CI-4825
 Integrantes:
-Yerson Roa - carnet:
+Yerson Roa - carnet: 11-10876
 Douglas Torres - carnet: 11-11027
 
 Programa concurrente que realiza las labores del servidor. */
@@ -20,7 +20,7 @@ Programa concurrente que realiza las labores del servidor. */
 #include <signal.h>
 
 int cantidad_retiros = 0;	// Contador sobre retiros totales realizados. 
-int usuarios[30000];		// Arreglo de id de usuarios que han retirado.
+int usuarios[30001];		// Arreglo de id de usuarios que han retirado.
 int total = 80000;			// Cantidad de efectivo disponible.
 char *bit_retiro;			// Apuntador al archivo de bitácora de retiros.
 char *bit_deposito;			// Apuntador al archivo de bitácora de depósitos.
@@ -30,7 +30,7 @@ pthread_mutex_t semaforo;	// Evita conflicto en operaciones criticas.
 void timer_handler (int signum) {	
 	printf("Cambio de día. \n");
 	cantidad_retiros = 0;
-  	memset(usuarios, 0, 30000);
+  	memset(usuarios, 0, 30001);
 }
 
 /*  Función encargada de procesar la llamada del programa y en caso de presentar
@@ -141,7 +141,7 @@ void *conexion(void *cli_fd_ptr){
 			exit(0);
 		}
 		total = total + monto;
-		fprintf(fd_r,"Fecha: %d/%d/%d Hora: %d:%d:%d deposito %d bs %d \n",t.tm_mday,
+		fprintf(fd_d,"Fecha: %d/%d/%d Hora: %d:%d:%d deposito %d bs %d \n",t.tm_mday,
 			t.tm_mon,t.tm_year,t.tm_hour,t.tm_min,t.tm_sec,monto,id_usuario);
 		fclose(fd_d);
 	} else if (total > 5000 && !strcmp(op,"r") && cantidad_op < 3){
@@ -160,12 +160,10 @@ void *conexion(void *cli_fd_ptr){
 				t.tm_mon,t.tm_year,t.tm_hour,t.tm_min,t.tm_sec,monto,id_usuario);
 			fclose(fd_r);
 		}
-	} else if (monto > 3000 && !strcmp(op,"r")){
-		send(*cli_fd,"4",55,0);
 	} else if (cantidad_op == 3) {
-		send(*cli_fd,"5",55,0);
+		send(*cli_fd,"4",55,0);
 	} else if (total < 5001 && !strcmp(op,"r")) {
-		send(*cli_fd,"6",55,0);
+		send(*cli_fd,"5",55,0);
 	}
 
 	cantidad_op = 0;		
@@ -222,11 +220,11 @@ int main(int argc, char *argv[]) {
     size=sizeof(struct sockaddr_in);	
   	pthread_mutex_unlock(&semaforo);
     
-	/* Se configura el cronómetro de "cambio de día" a 60 segundos, esto para 
+	/* Se configura el cronómetro de "cambio de día" a 120 segundos, esto para 
 		efectos de que sea fácil de comprobar dicho cambio. */
-	cronometro.it_value.tv_sec = 60;
+	cronometro.it_value.tv_sec = 120;
 	cronometro.it_value.tv_usec = 0;
-	cronometro.it_interval.tv_sec = 60; //Segundos en reinicializar el temporizador.
+	cronometro.it_interval.tv_sec = 120; //Segundos en reinicializar el temporizador.
 	cronometro.it_interval.tv_usec = 0;
 	// Inicio del cronometro.
 	setitimer(ITIMER_REAL, &cronometro, NULL);

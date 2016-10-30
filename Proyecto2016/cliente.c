@@ -1,6 +1,6 @@
 /* Proyecto 1 - CI-4825
 Integrantes:
-Yerson Roa - carnet:
+Yerson Roa - carnet: 11-10876
 Douglas Torres - carnet: 11-11027
 
 Programa que realiza las labores del cliente. */
@@ -114,8 +114,8 @@ void parse_arguments(int argc, char *argv[], char **port, int *i, char **server,
 	de socket, conexión con el servidor y resultado de la operación realizada.
 */
 int main (int argc, char *argv[]) {
-	char *message1 = "Ingrese la cantidad a Depositar: ";
-	char *message2 = "Ingrese la cantidad a Retirar: ";
+	char *message1 = "Ingrese la cantidad a depositar: ";
+	char *message2 = "Ingrese la cantidad a retirar: ";
     int try, c, id, j, a, len, value, n;
     struct addrinfo hints, *servinfo;
     char *server = NULL;
@@ -167,26 +167,22 @@ int main (int argc, char *argv[]) {
  		printf("Mensaje del Servidor: \n");
 	    switch (buffer[0]) {
 	    	case '2':
-	    		printf("Deposito hecho con exito.\n");
+	    		printf("Depósito hecho con éxito.\n");
 	    		sprintf(buffer, "%d", id);
-	    		send(sock, buffer, strlen(buffer), 0);
+	    		send(sock, buffer, 55, 0);
 	    		close(sock);
 	    		return 0;
 	    	case '3':
-	    		printf("Retiro hecho con exito.\n");
+	    		printf("Retiro hecho con éxito.\n");
 	    		sprintf(buffer, "%d", id);
 	    		send(sock, buffer, strlen(buffer), 0);
 	    		close(sock);
 	    		return 0;
 	    	case '4':
-	    		printf("No es posible establecer el retiro. Monto mayor al maximo permitido (Maximo 3000).\n");
+	    		printf("Ha retirado la cantidad máxima diaria establecida por el banco.\n");
 	    		close(sock);
 	    		return -1;
 	    	case '5':
-	    		printf("Ha retirado la cantidad maxima diaria establecida por el cajero\n");
-	    		close(sock);
-	    		return -1;
-	    	case '6':
 	    		printf("No es posible establecer el retiro. Cantidad de dinero insuficiente.\n");
 	    		close(sock);
 	    		return -1;

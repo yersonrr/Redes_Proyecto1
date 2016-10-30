@@ -1,0 +1,48 @@
+Proyecto 1 - CI-4825
+Integrantes:
+Yerson Roa - carnet: 11-10876
+Douglas Torres - carnet: 11-11027
+
+El código del proyecto se compone de tres (3) archivos que corresponden a:
+
+- Makefile: Permite la compilación fácil y cómoda del código con el comando "make", 
+al igual que permite limpiar el directorio de los ejecutables a través del comando "make clean".
+- servidor.c: Código que corresponde a la administración de las actividades de 
+la central del banco, como llevar el total de dinero disponible, mantener registro
+de los usuarios que retiran dinero. Para esto, crea hilos para cada conexión que recibe, 
+escribe en las bitácoras los resultados de las operaciones. 
+
+Para ejecutar este programa, después de compilar, se hace mediante el comando:
+./bsb_svr -l <número_puerto> -i <bitácora_depósito> -o <bitácora_retiro>.
+
+Donde el número_puerto corresponde al puerto donde el servidor escuchará por 
+conexiones entrantes, bitácora_depósito el nombre del archivo donde se escribirá el 
+resultado de las operaciones de depósito y bitácora_retiro el nombre del archivo donde
+se escribirá el resultado de las operaciones de retiro. Todos los flags deben ser colocados, 
+sin embargo, estos pueden encontrarse en cualquier orden.
+
+- cliente.c: Código que corresponde a la actividades del cajero, permite establecer 
+conexión con la central del banco, especificar la operación a realizar y el monto a 
+depositar/retirar.
+
+Para ejecutar este programa, después de compilar, se hace mediante el comando:
+./bsb_cli -d <ip_servidor> -p <puerto_servidor> -c <operación> -i <código_usuario>.
+
+Donde el ip_servidor es la dirección IPv4 donde se está ejecutando el servidor, 
+puerto_servidor es el puerto donde el servidor escucha conexiones, operación significa
+la transacción a realizar(d para depósito, r para retiro) y código_usuario el identificador
+del usuario. Todos los flags deben ser colocados, sin embargo, estos pueden encontrarse 
+en cualquier orden.
+
+Condiciones particulares: 
+	- Sólo se permiten hasta 100 conexiones simultáneas, es decir, máximo 100 hilos posibles.
+	- El id de los usuarios debe ser un entero de 4 dígitos.
+	- Como consecuencia de los puntos anteriores, se puede llevar registro de hasta 30000 id
+	de usuarios que hayan retirado. (Cada retiro agrega dicho id en el arreglo y como el
+	máximo de retiros por día es 3 y hay 10000 id disponibles).
+	- El tamaño del buffer, tanto del cliente como del servidor está limitado a 55 bytes.
+	- El temporizador para el fin del día, es decir, cuando se reinicia el arreglo de 
+	usuarios que han retirado, está puesto en 120 segundos para efectos cómodos a la hora de
+	corregir y realizar las pruebas. Si se desea colocar de mayor longitud, hay que modificar
+	las variables "cronometro.it_value.tv_sec" y "cronometro.it_interval.tv_sec" en el 
+	archivo servidor.c.
